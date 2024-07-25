@@ -16,59 +16,68 @@ const (
 )
 
 type actionMessage struct {
-	Action   string
-	User     string
-	Key      string
-	FileName string
-	File     []byte
+	Action   string `json:"action,omitempty"`
+	User     string `json:"user,omitempty"`
+	Key      string `json:"key,omitempty"`
+	FileName string `json:"file_name,omitempty"`
+	File     []byte `json:"file,omitempty"`
 }
 type actionResponse struct {
 	Okay bool   `json:"okay"`
 	Data string `json:"data,omitempty"`
 }
 
-func (sm *actionMessage) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Action   string `json:"action,omitempty"`
-		User     string `json:"user,omitempty"`
-		Key      string `json:"key,omitempty"`
-		FileName string `json:"file_name,omitempty"`
-		File     string `json:"file,omitempty"`
-	}{
-		Action:   sm.Action,
-		Key:      sm.Key,
-		User:     sm.User,
-		FileName: sm.FileName,
-		File:     string(sm.File),
-	})
-}
-
 func (sm *actionMessage) String() string {
-	j, err := json.Marshal(sm)
-	if err != nil {
-		return ""
-	}
-	return fmt.Sprintf("x=%s", j)
-}
+	/*
+		pr, pw := io.Pipe()
+		go func() {
 
+			gw, err := gzip.NewWriterLevel(pw, gzip.BestCompression)
+
+			if err != nil {
+				panic(err)
+			}
+			err = json.NewEncoder(gw).Encode(sm)
+			defer gw.Close()
+			defer pw.CloseWithError(err)
+		}()
+		bb := make([]byte, 0)
+		b := bytes.NewBuffer(bb)
+		c, err := io.Copy(b, pr)
+		fmt.Println(c)
+		if err != nil {
+			panic(err)
+		}
+				return pr
+	*/
+	b, _ := json.Marshal(sm)
+	return string(b)
+}
 func UploadSave(user string, key string, filename string, save []byte) error {
 	sm := &actionMessage{Action: "upload", User: user, Key: key, FileName: filename, File: save}
-	j := sm.String()
-	resp, err := client.Post(url, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(j)))
+	req, err := http.NewRequest("POST", url, bytes.NewBufferString(sm.String()))
 	if err != nil {
 		return err
 	}
-	bodyBuffer := make([]byte, resp.ContentLength)
+	defer req.Body.Close()
+	req.Header.Set("Content-Type", "application/json")
+	//	req.Header.Set("Content-Encoding", "gzip")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	bodyBuffer := make([]byte, 0)
+	b := bytes.NewBuffer(bodyBuffer)
+	_, _ = io.Copy(b, resp.Body)
 	defer resp.Body.Close()
-	_, _ = resp.Body.Read(bodyBuffer)
-	fmt.Printf("Response: %s\n", string(bodyBuffer))
+	fmt.Printf("Response: %s\n", b.String())
 	return err
 }
 
 func DownloadSave(user string, key string) (string, error) {
 	sm := &actionMessage{Action: "download", User: user, Key: key}
-	j := sm.String()
-	resp, err := client.Post(url, "application/x-www-form-urlencoded", bytes.NewBuffer([]byte(j)))
+	resp, err := client.Post(url, "application/json", bytes.NewBufferString(sm.String()))
 	if err != nil {
 		return "", err
 	}
@@ -87,6 +96,8 @@ func DownloadSave(user string, key string) (string, error) {
 	ar := &actionResponse{}
 	err = json.Unmarshal(buffer.Bytes(), ar)
 	if err != nil {
+		str := buffer.String()
+		fmt.Println(str)
 		return "", err
 	}
 	if !ar.Okay {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"lostgrace/config"
@@ -87,11 +88,14 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		b := []byte(dl)
+		b, err := base64.StdEncoding.DecodeString(dl)
+		if err != nil {
+			panic(err)
+		}
 
 		err = os.WriteFile(filepath, b, 0644)
 		if err != nil {
-			fmt.Println(err)
+			panic(err)
 		}
 
 	default:
