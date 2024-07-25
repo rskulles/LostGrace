@@ -74,9 +74,8 @@ func DownloadSave(user string, key string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	bodyBuffer := make([]byte, 0, resp.ContentLength)
-
-	buffer := bytes.NewBuffer(bodyBuffer)
+	b := make([]byte, 0)
+	buffer := bytes.NewBuffer(b)
 	w, err := io.Copy(buffer, resp.Body)
 	if err != nil {
 		return "", err
