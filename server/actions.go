@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -59,8 +60,8 @@ func UploadSave(user string, key string, filename string, save []byte) error {
 		return err
 	}
 	bodyBuffer := make([]byte, resp.ContentLength)
+	defer resp.Body.Close()
 	_, _ = resp.Body.Read(bodyBuffer)
-
 	fmt.Printf("Response: %s\n", string(bodyBuffer))
 	return err
 }
@@ -72,10 +73,26 @@ func DownloadSave(user string, key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	bodyBuffer := make([]byte, resp.ContentLength)
-	_, _ = resp.Body.Read(bodyBuffer)
-	ar := &actionResponse{}
+	var c int64 = 0
+	for {
+		i, err := resp.Body.Read(bodyBuffer[c:])
+		c += int64(i)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				return "", err
+			}
+		}
+		if c >= resp.ContentLength {
+			break
+		}
 
+	}
+
+	ar := &actionResponse{}
 	err = json.Unmarshal(bodyBuffer, ar)
 	if err != nil {
 		return "", err
