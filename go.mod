@@ -1,3 +1,3 @@
-module awesomeProject
+module lostgrace
 
 go 1.22

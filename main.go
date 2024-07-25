@@ -1,11 +1,11 @@
 package main
 
 import (
-	"awesomeProject/config"
-	"awesomeProject/server"
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"lostgrace/config"
+	"lostgrace/server"
 	"os"
 	"path"
 )
