@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,7 +39,7 @@ func (sm *actionMessage) MarshalJSON() ([]byte, error) {
 		Key:      sm.Key,
 		User:     sm.User,
 		FileName: sm.FileName,
-		File:     base64.StdEncoding.EncodeToString(sm.File),
+		File:     string(sm.File),
 	})
 }
 

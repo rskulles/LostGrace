@@ -8,6 +8,9 @@ user.config
 *.dll
 *.so
 *.dylib
+lostgrace.exe
+lostgrace_win.exe
+lostgrace_linux
 
 # Test binary, built with `go test -c`
 *.test
