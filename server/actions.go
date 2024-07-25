@@ -74,26 +74,20 @@ func DownloadSave(user string, key string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	bodyBuffer := make([]byte, resp.ContentLength)
-	var c int64 = 0
-	for {
-		i, err := resp.Body.Read(bodyBuffer[c:])
-		c += int64(i)
-		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
-				return "", err
-			}
-		}
-		if c >= resp.ContentLength {
-			break
-		}
+	bodyBuffer := make([]byte, 0, resp.ContentLength)
 
+	buffer := bytes.NewBuffer(bodyBuffer)
+	w, err := io.Copy(buffer, resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if w < resp.ContentLength {
+		fmt.Printf("Response may not be parsed. Only %d of %d bytes read.\n", w, resp.ContentLength)
 	}
 
 	ar := &actionResponse{}
-	err = json.Unmarshal(bodyBuffer, ar)
+	err = json.Unmarshal(buffer.Bytes(), ar)
 	if err != nil {
 		return "", err
 	}
