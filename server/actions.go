@@ -28,28 +28,6 @@ type actionResponse struct {
 }
 
 func (sm *actionMessage) String() string {
-	/*
-		pr, pw := io.Pipe()
-		go func() {
-
-			gw, err := gzip.NewWriterLevel(pw, gzip.BestCompression)
-
-			if err != nil {
-				panic(err)
-			}
-			err = json.NewEncoder(gw).Encode(sm)
-			defer gw.Close()
-			defer pw.CloseWithError(err)
-		}()
-		bb := make([]byte, 0)
-		b := bytes.NewBuffer(bb)
-		c, err := io.Copy(b, pr)
-		fmt.Println(c)
-		if err != nil {
-			panic(err)
-		}
-				return pr
-	*/
 	b, _ := json.Marshal(sm)
 	return string(b)
 }
@@ -61,7 +39,6 @@ func UploadSave(user string, key string, filename string, save []byte) error {
 	}
 	defer req.Body.Close()
 	req.Header.Set("Content-Type", "application/json")
-	//	req.Header.Set("Content-Encoding", "gzip")
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
