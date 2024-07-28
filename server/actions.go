@@ -1,18 +1,24 @@
 package server
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	path2 "path"
+	"strings"
 )
 
 var client = &http.Client{}
 
 const (
-	url = "https://skulle.xyz/actions.php"
+	url      = "https://skulle.xyz/actions.php"
+	coopUrl  = "https://github.com/LukeYui/EldenRingSeamlessCoopRelease/releases/latest"
+	download = "https://github.com/LukeYui/EldenRingSeamlessCoopRelease/releases/download/<v>/ersc.zip"
 )
 
 type actionMessage struct {
@@ -81,4 +87,84 @@ func DownloadSave(user string, key string) (string, error) {
 		return "", errors.New("could not download file")
 	}
 	return ar.Data, nil
+}
+
+func InstallCoop(outPath string) error {
+
+	req, err := http.NewRequest("GET", coopUrl, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	newLocation := resp.Request.URL.Path
+	tags := strings.Split(newLocation, "/")
+	version := tags[len(tags)-1]
+	fullDownload := strings.Replace(download, "<v>", version, 1)
+	err = resp.Body.Close()
+	if err != nil {
+		return err
+	}
+	req, err = http.NewRequest("GET", fullDownload, nil)
+	if err != nil {
+		return nil
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		return nil
+	}
+	fileBuffer := bytes.Buffer{}
+	_, err = io.Copy(&fileBuffer, resp.Body)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile("./release.zip", fileBuffer.Bytes(), 0664)
+	if err != nil {
+		return err
+	}
+	f, err := os.Open("./release.zip")
+	if err != nil {
+		return err
+	}
+	r, err := zip.NewReader(f, int64(fileBuffer.Len()))
+
+	if err != nil {
+		return err
+	}
+
+	for _, zf := range r.File {
+		if zf.FileInfo().IsDir() {
+			err = os.MkdirAll(path2.Join(outPath, zf.Name), 0755)
+			if err != nil {
+				return err
+			}
+		}
+		nf, err := zf.Open()
+		if err != nil {
+			return err
+		}
+		buff := bytes.Buffer{}
+		_, err = io.Copy(&buff, nf)
+		if err != nil {
+			return err
+		}
+
+		path := path2.Dir(path2.Join(outPath, zf.Name))
+		err = os.MkdirAll(path, 0755)
+		if err != nil {
+			return nil
+		}
+		err = os.WriteFile(path2.Join(outPath, zf.Name), buff.Bytes(), 764)
+		if err != nil {
+			return err
+		}
+
+	}
+	err = os.RemoveAll("./release.zip")
+	if err != nil {
+		return err
+	}
+	return nil
 }
