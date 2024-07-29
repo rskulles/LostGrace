@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"gioui.org/app"
@@ -33,7 +32,7 @@ const (
 	ApplicationStateRunningTask
 )
 
-var appState ApplicationState = ApplicationStateIdle
+var appState = ApplicationStateIdle
 
 func init() {
 
@@ -220,17 +219,12 @@ func executeDownload() {
 		log.Fatal(err)
 	}
 
-	//TODO: This works, but do it as part of retrieval and return the bytes.
-	b, err := base64.StdEncoding.DecodeString(dl)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = os.WriteFile(filepath, b, 0644)
+	err = os.WriteFile(filepath, dl, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
+
 func main() {
 	flag.Parse()
 
@@ -241,6 +235,10 @@ func main() {
 	widgets.DownloadCommand = downloadCommand
 	widgets.InstallCommand = installCommand
 
+	if installFlagValue {
+		executeInstall()
+		os.Exit(0)
+	}
 	switch directionFlagValue {
 	case "up": //Passed -d up to application
 		executeUpload()
@@ -259,4 +257,5 @@ func main() {
 		}()
 		app.Main()
 	}
+	os.Exit(0)
 }
