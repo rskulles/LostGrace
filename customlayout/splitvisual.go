@@ -1,4 +1,4 @@
-package widgets
+package customlayout
 
 import (
 	"gioui.org/layout"

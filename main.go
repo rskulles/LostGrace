@@ -12,8 +12,8 @@ import (
 	"gioui.org/widget/material"
 	"log"
 	"lostgrace/config"
+	"lostgrace/customlayout"
 	"lostgrace/server"
-	"lostgrace/widgets"
 	"os"
 	"path"
 )
@@ -55,11 +55,11 @@ func saveCommand() {
 	defer toggleIdle()
 	c := config.NewConfig(configPath)
 
-	c.Name = widgets.GetName()
-	c.Key = widgets.GetKey()
-	c.FileExtension = widgets.GetExt()
-	c.Path = widgets.GetSavePath()
-	c.GamePath = widgets.GetGamePath()
+	c.Name = customlayout.GetName()
+	c.Key = customlayout.GetKey()
+	c.FileExtension = customlayout.GetExt()
+	c.Path = customlayout.GetSavePath()
+	c.GamePath = customlayout.GetGamePath()
 	err := c.Save()
 	if err != nil {
 		log.Fatal(err)
@@ -74,7 +74,7 @@ func reloadCommand() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	widgets.SetConfig(c)
+	customlayout.SetConfig(c)
 }
 
 func uploadCommand() {
@@ -165,7 +165,7 @@ func run(window *app.Window) error {
 			}()
 
 			if appState == ApplicationStateIdle {
-				widgets.StandardLayout(theme, gtx)
+				customlayout.StandardLayout(theme, gtx)
 			} else {
 				layout.Stack{Alignment: layout.Center}.Layout(gtx,
 					layout.Expanded(func(g layout.Context) layout.Dimensions {
@@ -228,12 +228,12 @@ func executeDownload() {
 func main() {
 	flag.Parse()
 
-	// Wire up the widgets buttons
-	widgets.SaveCommand = saveCommand
-	widgets.ReloadCommand = reloadCommand
-	widgets.UploadCommand = uploadCommand
-	widgets.DownloadCommand = downloadCommand
-	widgets.InstallCommand = installCommand
+	// Wire up the buttons
+	customlayout.SaveCommand = saveCommand
+	customlayout.ReloadCommand = reloadCommand
+	customlayout.UploadCommand = uploadCommand
+	customlayout.DownloadCommand = downloadCommand
+	customlayout.InstallCommand = installCommand
 
 	if installFlagValue {
 		executeInstall()
