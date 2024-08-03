@@ -198,10 +198,12 @@ func InstallCoop(outPath string) error {
 		}
 
 	}
+	// Close the file so we can clean it up
 	err = f.Close()
 	if err != nil {
 		return err
 	}
+
 	//clean up
 	err = os.RemoveAll("./release.zip")
 	if err != nil {
