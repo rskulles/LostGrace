@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"lostgrace/utility"
 	"net/http"
 	"os"
 	"path"
@@ -46,7 +45,9 @@ func UploadSave(user string, key string, filename string, save []byte) error {
 	if err != nil {
 		return err
 	}
-	defer utility.LogIfError(req.Body.Close())
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(req.Body)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 
@@ -60,7 +61,10 @@ func UploadSave(user string, key string, filename string, save []byte) error {
 	if err != nil {
 		return err
 	}
-	defer utility.LogIfError(resp.Body.Close())
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
 	fmt.Printf("Response: %s\n", b.String())
 	return err
 }
@@ -72,7 +76,10 @@ func DownloadSave(user string, key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer utility.LogIfError(resp.Body.Close())
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
 	buffer := bytes.NewBuffer(b)
 	w, err := io.Copy(buffer, resp.Body)
 	if err != nil {
